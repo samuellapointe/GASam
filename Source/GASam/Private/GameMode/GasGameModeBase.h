@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "GASamGameModeBase.generated.h"
+#include "GasGameModeBase.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class GASAM_API AGASamGameModeBase : public AGameModeBase
+class GASAM_API AGasGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
