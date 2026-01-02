@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AbilitySystemInterface.h"
 #include "GameFramework/Character.h"
 #include "GasPlayerCharacter.generated.h"
 
@@ -12,19 +13,31 @@ class UInputMappingContext;
 struct FInputActionValue;
 
 UCLASS()
-class AGasPlayerCharacter : public ACharacter
+class AGasPlayerCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
 public:
+	// ~Begin ACharacter
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	virtual void PossessedBy(AController* NewController) override;
+	virtual void OnRep_PlayerState() override;
+	// ~End ACharacter
+
+	// ~Begin IAbilitySystemInterface
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	// ~End IAbilitySystemInterface
 
 protected:
+	void InitializeAbilitySystemComponent();
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 
 private:
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 

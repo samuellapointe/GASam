@@ -2,8 +2,10 @@
 
 #include "GasPlayerCharacter.h"
 
+#include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GasPlayerState.h"
 
 void AGasPlayerCharacter::BeginPlay()
 {
@@ -32,6 +34,45 @@ void AGasPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 	
+}
+
+UAbilitySystemComponent* AGasPlayerCharacter::GetAbilitySystemComponent() const
+{
+	return AbilitySystemComponent;
+}
+
+void AGasPlayerCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	// [INFO] The server's path for initializing the ASC
+	InitializeAbilitySystemComponent();
+}
+
+void AGasPlayerCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	// [INFO] The client's path for initializing the ASC. This is not necessary for single-player games.
+	InitializeAbilitySystemComponent();
+}
+
+void AGasPlayerCharacter::InitializeAbilitySystemComponent()
+{
+	/* [INFO] This is a function called both by the server and the client to initialize the AbilitySystemComponent
+	 * when we know it's accessible. Calling InitAbilityActorInfo sets the OwnerActor, on whose lifetime the ASC
+	 * depends, and the AvatarActor, which is the physical representation of the ASC's owner in the game world.
+	 *
+	 * InitAbilityActorInfo must be called on both the server and the client, and it should be called whenever the
+	 * owner or avatar actor changes. 
+	 * 
+	 * Calling InitAbilityActorInfo multiple times is fine, and having no AvatarActor is also technically fine,
+	 * for example to have some attributes or effects persist while your character is respawning.
+	 */
+	AGasPlayerState* GasPlayerState = GetPlayerStateChecked<AGasPlayerState>();
+
+	AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
+	AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
 }
 
 void AGasPlayerCharacter::Move(const FInputActionValue& Value)
