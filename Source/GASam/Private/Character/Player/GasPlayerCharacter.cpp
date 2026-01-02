@@ -1,4 +1,4 @@
-// Samuel Lapointe - 2025
+// Samuel Lapointe - 2026
 
 #include "GasPlayerCharacter.h"
 
