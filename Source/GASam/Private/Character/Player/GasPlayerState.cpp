@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "GAS/Attributes/HealthAttributeSet.h"
+#include "GAS/Attributes/ManaAttributeSet.h"
 
 AGasPlayerState::AGasPlayerState()
 {
@@ -17,6 +18,7 @@ AGasPlayerState::AGasPlayerState()
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	HealthSet = CreateDefaultSubobject<UHealthAttributeSet>("Health Attribute Set");
+	ManaSet = CreateDefaultSubobject<UManaAttributeSet>("Mana Attribute Set");
 
 	/* How often the server will try to update clients. The default value for the PlayerState is quite low,
 	 * and since it owns the AbilitySystemComponent, we'll want it to have a higher net update frequency.

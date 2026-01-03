@@ -8,6 +8,7 @@
 #include "GasPlayerState.generated.h"
 
 class UHealthAttributeSet;
+class UManaAttributeSet;
 
 /**
  * 
@@ -30,6 +31,7 @@ public:
 	// ~End IAbilitySystemInterface
 
 	const UHealthAttributeSet* GetHealthSet() const { return HealthSet; };
+	const UManaAttributeSet* GetManaSet() const { return ManaSet; };
 
 protected:
 	/* [INFO] In most cases you'll use a custom child class of UAbilitySystemComponent here to have more control over
@@ -43,4 +45,7 @@ private:
 	 */
 	UPROPERTY()
 	TObjectPtr<UHealthAttributeSet> HealthSet;
+
+	UPROPERTY()
+	TObjectPtr<UManaAttributeSet> ManaSet;
 };

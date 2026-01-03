@@ -8,6 +8,8 @@
 
 struct FOnAttributeChangeData;
 class UHealthAttributeSet;
+class UManaAttributeSet;
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnAttributeChangedDelegate, float, NewValue);
 
 /**
@@ -37,7 +39,10 @@ public:
 protected:
 	void HealthChanged(const FOnAttributeChangeData& Data) const;
 	void MaxHealthChanged(const FOnAttributeChangeData& Data) const;
+	void ManaChanged(const FOnAttributeChangeData& Data) const;
+	void MaxManaChanged(const FOnAttributeChangeData& Data) const;
 	
 private:
 	const UHealthAttributeSet* GetHealthAttributeSet() const;
+	const UManaAttributeSet* GetManaAttributeSet() const;
 };
