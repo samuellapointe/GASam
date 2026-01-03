@@ -35,9 +35,11 @@ protected:
 	void Look(const FInputActionValue& Value);
 
 private:
+	// Gameplay Ability System related properties
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
-	
+
+	// Controls
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 

@@ -32,4 +32,11 @@ protected:
 	 * it, but for this simple example project it's not necessary. */
 	UPROPERTY()
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+
+private:
+	/* Since the PlayerState owns the AbilitySystemComponent, it makes sense for it to also own its attribute sets.
+	 * However, we could have chosen to place this in a dedicated Health Component instead.
+	 */
+	UPROPERTY()
+	TObjectPtr<const class UHealthAttributeSet> HealthSet;
 };

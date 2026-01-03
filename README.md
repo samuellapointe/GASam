@@ -11,7 +11,7 @@ Controls:
 * Camera: Mouse movement
 
 ### Browsing the code:
-Throughout the project, useful information has been marked in comments with `[INFO]`
+Throughout the project, useful information about GAS concepts has been marked in comments with `[INFO]`
 
 #### Suggested browsing order:
 1. Initialization of the ASC

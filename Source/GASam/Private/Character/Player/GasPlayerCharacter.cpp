@@ -45,7 +45,7 @@ void AGasPlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	// [INFO] The server's path for initializing the ASC
+	// The server's path for initializing the ASC
 	InitializeAbilitySystemComponent();
 }
 
@@ -53,7 +53,7 @@ void AGasPlayerCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	// [INFO] The client's path for initializing the ASC. This is not necessary for single-player games.
+	// The client's path for initializing the ASC. This is not necessary for single-player games.
 	InitializeAbilitySystemComponent();
 }
 
