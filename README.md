@@ -20,3 +20,7 @@ Throughout the project, useful information about GAS concepts has been marked in
    2. [AGasPlayerState::AGasPlayerState()](Source/GASam/Private/Character/Player/GasPlayerState.cpp) for the 
       instantiation
    3. [AGasPlayerCharacter::InitializeAbilitySystemComponent](Source/GASam/Private/Character/Player/GasPlayerCharacter.cpp) for the initialization
+2. Creation of the attributes
+   1. [HealthAttributeSet.h](Source/GASam/Private/GAS/Attributes/HealthAttributeSet.h) and its cpp file for an 
+      example of an attribute set. ManaAttributeSet is very similar although simpler. They get instanciated in the 
+      PlayerState's constructor.
