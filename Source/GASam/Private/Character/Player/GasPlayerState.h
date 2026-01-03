@@ -7,6 +7,8 @@
 #include "GameFramework/PlayerState.h"
 #include "GasPlayerState.generated.h"
 
+class UHealthAttributeSet;
+
 /**
  * 
  */
@@ -27,6 +29,8 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	// ~End IAbilitySystemInterface
 
+	const UHealthAttributeSet* GetHealthSet() const { return HealthSet; };
+
 protected:
 	/* [INFO] In most cases you'll use a custom child class of UAbilitySystemComponent here to have more control over
 	 * it, but for this simple example project it's not necessary. */
@@ -38,5 +42,5 @@ private:
 	 * However, we could have chosen to place this in a dedicated Health Component instead.
 	 */
 	UPROPERTY()
-	TObjectPtr<const class UHealthAttributeSet> HealthSet;
+	TObjectPtr<UHealthAttributeSet> HealthSet;
 };

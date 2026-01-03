@@ -8,6 +8,13 @@
 
 UHealthAttributeSet::UHealthAttributeSet()
 {
+	/* [INFO] There are many ways to initialize the default values for attributes. This is the simplest, but also
+	 * the least accessible to designers. More accessible options include applying a GameplayEffect at the start
+	 * of the game, or using the GlobalAttributeSetDefaultsTable.
+	 * For more information: https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#howshouldiinitializeattributevalues?
+	 */
+	InitHealth(100.f);
+	InitMaxHealth(100.f);
 }
 
 void UHealthAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GasPlayerState.h"
+#include "UI/GasHUD.h"
 
 void AGasPlayerCharacter::BeginPlay()
 {
@@ -73,6 +74,14 @@ void AGasPlayerCharacter::InitializeAbilitySystemComponent()
 
 	AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
+
+	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	{
+		if (AGasHUD* GasHUD = Cast<AGasHUD>(PlayerController->GetHUD()))
+		{
+			GasHUD->InitOverlay(GasPlayerState);
+		}
+	}
 }
 
 void AGasPlayerCharacter::Move(const FInputActionValue& Value)
