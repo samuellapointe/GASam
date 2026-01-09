@@ -11,6 +11,7 @@ Controls:
 * Movement: WASD keys, or arrow keys
 * Jump: Spacebar
 * Camera: Mouse movement
+* V: Debug apply damage to self
 
 ### Browsing the code:
 Throughout the project, useful information about GAS concepts has been marked in comments with `[INFO]`
