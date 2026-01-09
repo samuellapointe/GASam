@@ -4,6 +4,8 @@
 #include "GasPlayerState.h"
 
 #include "AbilitySystemComponent.h"
+#include "EditorCategoryUtils.h"
+#include "GameFramework/GameModeBase.h"
 #include "GAS/Attributes/HealthAttributeSet.h"
 #include "GAS/Attributes/ManaAttributeSet.h"
 
@@ -29,4 +31,55 @@ AGasPlayerState::AGasPlayerState()
 UAbilitySystemComponent* AGasPlayerState::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
+}
+
+void AGasPlayerState::GrantDefaultAbilities() const
+{
+	check(AbilitySystemComponent);
+	
+	AbilitySystemComponent->ClearAllAbilities();
+	for (const TSubclassOf<UGameplayAbility>& AbilityClass : AbilitiesToGrantOnStart)
+	{
+		if (IsValid(AbilityClass))
+		{
+			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass));
+		}
+	}
+}
+
+void AGasPlayerState::ApplyDefaultEffects() const
+{
+	check(AbilitySystemComponent);
+	for (const TSubclassOf<UGameplayEffect>& EffectClass : EffectsToApplyOnStart)
+	{
+		if (IsValid(EffectClass))
+		{
+			FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+			Context.AddSourceObject(this);
+
+			constexpr int Level = 1.f;
+			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, Context);
+
+			if (SpecHandle.IsValid())
+			{
+				AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}
+	}
+}
+
+void AGasPlayerState::RespawnCharacter() const
+{
+	if (UWorld* World = GetWorld())
+	{
+		if (AGameModeBase* GameMode = World->GetAuthGameMode())
+		{
+			if (APawn* Pawn = GetPawn())
+			{
+				Pawn->Destroy();
+			}
+			
+			GameMode->RestartPlayer(GetOwningController());
+		}
+	}
 }

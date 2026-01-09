@@ -74,6 +74,8 @@ void AGasPlayerCharacter::InitializeAbilitySystemComponent()
 
 	AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
+	GasPlayerState->GrantDefaultAbilities();
+	GasPlayerState->ApplyDefaultEffects(); // Serves both to initialize all attributes (health, mana) and refill them on respawn
 
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{

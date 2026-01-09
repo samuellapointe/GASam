@@ -27,13 +27,15 @@ public:
 	ATTRIBUTE_ACCESSORS(UHealthAttributeSet, Damage);
 
 protected:
+	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+
 	UFUNCTION()
 	virtual void OnRep_Health(const FGameplayAttributeData& OldHealth);
 
 	UFUNCTION()
 	virtual void OnRep_MaxHealth(const FGameplayAttributeData& OldMaxHealth);
-
-	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;
+	
+	void FireDeathEvent() const;
 
 private:
 	UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_Health, Meta=(AllowPrivateAccess=true))
@@ -48,5 +50,8 @@ private:
 	 */
 	UPROPERTY(BlueprintReadOnly, Category="Lyra|Health", Meta=(HideFromModifiers, AllowPrivateAccess=true))
 	FGameplayAttributeData Damage;
+
+	// Used to track when the health reaches 0, preventing the death event from firing twice.
+	bool bOutOfHealth = false;
 	
 };

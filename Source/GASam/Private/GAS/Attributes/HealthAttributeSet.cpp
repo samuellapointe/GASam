@@ -4,17 +4,18 @@
 #include "GAS/Attributes/HealthAttributeSet.h"
 
 #include "GameplayEffectExtension.h"
+#include "GASamGameplayTags.h"
 #include "Net/UnrealNetwork.h"
 
 UHealthAttributeSet::UHealthAttributeSet()
 {
 	/* [INFO] There are many ways to initialize the default values for attributes. This is the simplest, but also
-	 * the least accessible to designers. More accessible options include applying a GameplayEffect at the start
-	 * of the game, or using the GlobalAttributeSetDefaultsTable.
+	 * the least accessible to designers. This is an example only, as our GasPlayerState contains an array of
+	 * GameplayEffects to apply on start, which is what we actually use to initialize our attributes in this project.
 	 * For more information: https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#howshouldiinitializeattributevalues?
 	 */
-	InitHealth(100.f);
-	InitMaxHealth(100.f);
+	InitHealth(20.f);
+	InitMaxHealth(20.f);
 }
 
 void UHealthAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -42,5 +43,31 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
 		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), 0.f, GetMaxHealth()));
+	}
+
+	if (GetHealth() <= 0.f && !bOutOfHealth)
+	{
+		bOutOfHealth = true;
+		FireDeathEvent();
+	}
+	else if (bOutOfHealth && GetHealth() > 0.f) // Triggers on respawn, when our init gameplay effect refills health
+	{
+		bOutOfHealth = false;
+	}
+}
+
+void UHealthAttributeSet::FireDeathEvent() const
+{
+	if (UAbilitySystemComponent* OwnerASC = GetOwningAbilitySystemComponent())
+	{
+		if (!OwnerASC->IsOwnerActorAuthoritative())
+		{
+			return;
+		}
+		
+		FGameplayEventData EventData;
+		EventData.EventTag = GASamGameplayTags::GameplayEvent_Death;
+		EventData.Target = OwnerASC->GetAvatarActor();
+		OwnerASC->HandleGameplayEvent(EventData.EventTag, &EventData);
 	}
 }

@@ -13,5 +13,4 @@ UCLASS()
 class GASAM_API AGasGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
 };
