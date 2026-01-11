@@ -66,7 +66,7 @@ void UHealthAttributeSet::FireDeathEvent() const
 		}
 		
 		FGameplayEventData EventData;
-		EventData.EventTag = GASamGameplayTags::GameplayEvent_Death;
+		EventData.EventTag = GASamGameplayTags::GASam_GameplayEvent_Death;
 		EventData.Target = OwnerASC->GetAvatarActor();
 		OwnerASC->HandleGameplayEvent(EventData.EventTag, &EventData);
 	}
