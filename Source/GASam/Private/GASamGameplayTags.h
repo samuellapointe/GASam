@@ -7,4 +7,6 @@
 namespace GASamGameplayTags
 {
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GASam_GameplayEvent_Death)
+
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(GASam_Ability_Fireball)
 }

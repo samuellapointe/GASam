@@ -5,6 +5,7 @@
 #include "AbilitySystemComponent.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "GASamGameplayTags.h"
 #include "GasPlayerState.h"
 #include "UI/GasHUD.h"
 
@@ -34,7 +35,14 @@ void AGasPlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInput
 	
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACharacter::Jump);
 	EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-	
+
+	/* [INFO] Abilities can be bound directly to inputs by defining an enum of Input IDs and using FGameplayAbilityInputBinds.
+	 * However, Epic mentions they don't use this in any of their shipped titles due to inflexibility. As an alternative,
+	 * we use TryActivateAbilityByTag and we let design decide which ability is triggered by the primary and secondary
+	 * ability inputs.
+	 */
+	EnhancedInputComponent->BindAction(PrimaryAbilityAction, ETriggerEvent::Triggered, this, &AGasPlayerCharacter::UsePrimaryAbility);
+	EnhancedInputComponent->BindAction(SecondaryAbilityAction, ETriggerEvent::Triggered, this, &AGasPlayerCharacter::UseSecondaryAbility);
 }
 
 UAbilitySystemComponent* AGasPlayerCharacter::GetAbilitySystemComponent() const
@@ -106,4 +114,25 @@ void AGasPlayerCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void AGasPlayerCharacter::UsePrimaryAbility(const FInputActionValue& Value)
+{
+	UseAbilityByTags(PrimaryAbilityTags);
+}
+
+void AGasPlayerCharacter::UseSecondaryAbility(const FInputActionValue& Value)
+{
+	UseAbilityByTags(SecondaryAbilityTags);
+}
+
+void AGasPlayerCharacter::UseAbilityByTags(const FGameplayTagContainer& AbilityTags) const
+{
+	if (!AbilitySystemComponent)
+	{
+		return;
+	}
+	
+	constexpr bool bAllowRemoteActivation = true;
+	AbilitySystemComponent->TryActivateAbilitiesByTag(AbilityTags, bAllowRemoteActivation);
 }

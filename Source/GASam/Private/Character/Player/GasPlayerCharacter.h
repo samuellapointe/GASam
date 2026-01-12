@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
+#include "GameplayTagContainer.h"
 #include "GameFramework/Character.h"
 #include "GasPlayerCharacter.generated.h"
 
@@ -33,11 +34,22 @@ protected:
 	void InitializeAbilitySystemComponent();
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
+	void UsePrimaryAbility(const FInputActionValue& Value);
+	void UseSecondaryAbility(const FInputActionValue& Value);
+	void UseAbilityByTags(const FGameplayTagContainer& AbilityTags) const;
 
 private:
 	// Gameplay Ability System related properties
+
+	// A non-owning pointer to the ASC. The real owner is this character's PlayerState
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UAbilitySystemComponent> AbilitySystemComponent;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
+	FGameplayTagContainer PrimaryAbilityTags;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
+	FGameplayTagContainer SecondaryAbilityTags;
 
 	// Controls
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
@@ -51,4 +63,10 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
 	TObjectPtr<UInputAction> JumpAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
+	TObjectPtr<UInputAction> PrimaryAbilityAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta=(AllowPrivateAccess=true))
+	TObjectPtr<UInputAction> SecondaryAbilityAction;
 };
