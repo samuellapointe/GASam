@@ -32,6 +32,8 @@ public:
 
 protected:
 	void InitializeAbilitySystemComponent();
+	void InitializeHUD() const;
+	
 	void Move(const FInputActionValue& Value);
 	void Look(const FInputActionValue& Value);
 	void UsePrimaryAbility(const FInputActionValue& Value);

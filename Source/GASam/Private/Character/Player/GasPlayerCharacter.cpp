@@ -56,6 +56,7 @@ void AGasPlayerCharacter::PossessedBy(AController* NewController)
 
 	// The server's path for initializing the ASC
 	InitializeAbilitySystemComponent();
+	InitializeHUD();
 }
 
 void AGasPlayerCharacter::OnRep_PlayerState()
@@ -64,6 +65,7 @@ void AGasPlayerCharacter::OnRep_PlayerState()
 
 	// The client's path for initializing the ASC. This is not necessary for single-player games.
 	InitializeAbilitySystemComponent();
+	InitializeHUD();
 }
 
 void AGasPlayerCharacter::InitializeAbilitySystemComponent()
@@ -82,13 +84,21 @@ void AGasPlayerCharacter::InitializeAbilitySystemComponent()
 
 	AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
 	AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
-	GasPlayerState->GrantDefaultAbilities();
-	GasPlayerState->ApplyDefaultEffects(); // Serves both to initialize all attributes (health, mana) and refill them on respawn
 
+	if (HasAuthority())
+	{
+		GasPlayerState->GrantDefaultAbilities();
+		GasPlayerState->ApplyDefaultEffects(); // Serves both to initialize all attributes (health, mana) and refill them on respawn
+	}
+}
+
+void AGasPlayerCharacter::InitializeHUD() const
+{
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (AGasHUD* GasHUD = Cast<AGasHUD>(PlayerController->GetHUD()))
 		{
+			AGasPlayerState* GasPlayerState = GetPlayerStateChecked<AGasPlayerState>();
 			GasHUD->InitOverlay(GasPlayerState);
 		}
 	}
