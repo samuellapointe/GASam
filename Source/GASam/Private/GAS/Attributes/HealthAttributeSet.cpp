@@ -42,7 +42,13 @@ void UHealthAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 
 	if (Data.EvaluatedData.Attribute == GetDamageAttribute())
 	{
-		SetHealth(FMath::Clamp(GetHealth() - GetDamage(), 0.f, GetMaxHealth()));
+		const float IncomingDamage = GetDamage();
+		SetDamage(0.f);
+		
+		if (IncomingDamage > 0.f)
+		{
+			SetHealth(FMath::Clamp(GetHealth() - IncomingDamage, 0.f, GetMaxHealth()));
+		}
 	}
 
 	if (GetHealth() <= 0.f && !bOutOfHealth)

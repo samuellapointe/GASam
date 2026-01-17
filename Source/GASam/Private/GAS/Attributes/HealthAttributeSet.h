@@ -48,7 +48,7 @@ private:
 	 * where it makes sense. For example, a raw value of incoming damage could be modified by a shield or a damage
 	 * type resistance before being applied as negative health. These are generally not replicated.
 	 */
-	UPROPERTY(BlueprintReadOnly, Category="Lyra|Health", Meta=(HideFromModifiers, AllowPrivateAccess=true))
+	UPROPERTY(BlueprintReadOnly, Category="Lyra|Health", Meta=(AllowPrivateAccess=true))
 	FGameplayAttributeData Damage;
 
 	// Used to track when the health reaches 0, preventing the death event from firing twice.
