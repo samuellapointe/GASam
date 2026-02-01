@@ -80,15 +80,16 @@ void AGasPlayerCharacter::InitializeAbilitySystemComponent()
 	 * Calling InitAbilityActorInfo multiple times is fine, and having no AvatarActor is also technically fine,
 	 * for example to have some attributes or effects persist while your character is respawning.
 	 */
-	AGasPlayerState* GasPlayerState = GetPlayerStateChecked<AGasPlayerState>();
-
-	AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
-	AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
-
-	if (HasAuthority())
+	if (AGasPlayerState* GasPlayerState = GetPlayerStateChecked<AGasPlayerState>())
 	{
-		GasPlayerState->GrantDefaultAbilities();
-		GasPlayerState->ApplyDefaultEffects(); // Serves both to initialize all attributes (health, mana) and refill them on respawn
+		AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
+		AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
+
+		if (HasAuthority())
+		{
+			GasPlayerState->GrantDefaultAbilities();
+			GasPlayerState->ApplyDefaultEffects(); // Serves both to initialize all attributes (health, mana) and refill them on respawn
+		}
 	}
 }
 
