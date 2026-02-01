@@ -97,12 +97,12 @@ First, create a function to handle the initialization of the ASC in your charact
 ```cpp
 void AGasPlayerCharacter::InitializeAbilitySystemComponent()
 {
-	if (AGasPlayerState* GasPlayerState = GetPlayerStateChecked<AGasPlayerState>())
-	{
-	    // Here, AbilitySystemComponent is a non-owning TObjectPtr that we save for convenience
-		AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
-		AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
-	}
+   if (AGasPlayerState* GasPlayerState = GetPlayerStateChecked<AGasPlayerState>())
+   {
+      // Here, AbilitySystemComponent is a non-owning TObjectPtr that we save for convenience
+      AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
+      AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
+   }
 }
 ```
 
@@ -116,15 +116,114 @@ called by the client.
 ```cpp
 void AGasPlayerCharacter::PossessedBy(AController* NewController)
 {
-	Super::PossessedBy(NewController);
-	InitializeAbilitySystemComponent();
+   Super::PossessedBy(NewController);
+   InitializeAbilitySystemComponent();
 }
 
 void AGasPlayerCharacter::OnRep_PlayerState()
 {
-	Super::OnRep_PlayerState();
-	InitializeAbilitySystemComponent();
+   Super::OnRep_PlayerState();
+   InitializeAbilitySystemComponent();
 }
 ```
 
-With this, the ASC is ready to use and it's up to you to decide what to do with it.
+With this, the ASC is ready to use, and it's up to you to decide what to do with it.
+
+### 3. Using attributes
+
+If you want your character to have health, mana, or any numerical characteristic and if you want those 
+characteristics to interact and be affected by the GameplayAbilitySystem, you need attributes. 
+
+In simplest terms, an attribute is a float value bound to an actor. It is stored in a UAttributeSet and owned by an 
+AbilitySystemComponent. It has a BaseValue and a CurrentValue, the latter being the result of the BaseValue plus 
+temporary modifications from active GameplayEffects and other GAS systems. For a more detailed explanation, see the 
+following documentation: https://github.com/tranek/GASDocumentation?tab=readme-ov-file#concepts-a
+
+#### 3.1. Setting up an AttributeSet
+
+An AttributeSet is a `UObject` containing definitions for Attributes. It also handles the replication of these 
+attributes as a SubObject of the AbilitySystemComponent's OwnerActor, although you still need to implement the proper 
+replication calls.
+
+First, you'll want to add the following macros (from AttributeSet.h) to your AttributeSet's header file:
+```h
+#define ATTRIBUTE_ACCESSORS(ClassName, PropertyName) \
+   GAMEPLAYATTRIBUTE_PROPERTY_GETTER(ClassName, PropertyName) \
+   GAMEPLAYATTRIBUTE_VALUE_GETTER(PropertyName) \
+   GAMEPLAYATTRIBUTE_VALUE_SETTER(PropertyName) \
+   GAMEPLAYATTRIBUTE_VALUE_INITTER(PropertyName)
+```
+
+Alternatively, you can create a Base AttributeSet class for your project and include this macro there. It's not 
+mandatory to use these macros, but it will save a lot of time and this walkthrough will assume you included them.
+
+#### 3.2. Defining a single attribute
+
+For a single attribute named Health, we would define it in the header file like so:
+```h
+public:
+   ATTRIBUTE_ACCESSORS(UMyAttributeSet, Health);
+   
+protected:
+   virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+   UFUNCTION()
+   void OnRep_Health(const FGameplayAttributeData& OldHealth);
+	
+private:
+   UPROPERTY(BlueprintReadOnly, Category = "Health", ReplicatedUsing = OnRep_Health, Meta=(AllowPrivateAccess=true))
+   FGameplayAttributeData Health;
+```
+
+and in the cpp file:
+```cpp
+void UMyAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+   Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+   DOREPLIFETIME_CONDITION_NOTIFY(UMyAttributeSet, Health, COND_None, REPNOTIFY_Always);
+}
+
+void UMyAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
+{
+   GAMEPLAYATTRIBUTE_REPNOTIFY(UMyAttributeSet, Health, OldHealth);
+}
+```
+
+However, attributes like Health generally come in pairs such as Health and MaxHealth. This is because while a single 
+attribute has a BaseValue and a CurrentValue, those refer to the value before and after the gameplay effects are 
+applied. Whenever we fetch the value of an attribute, we're usually looking for the CurrentValue.
+
+An attribute such as MaxHealth will allow you to implement having the player "refill" their health up to a defined 
+maximum (which can potentially be increased in game), which is what most games do with "resource" attributes. In 
+contrast, attributes such as a movement speed don't refill or deplete, so they don't need to track a maximum.
+
+#### 3.3. Adding attributes to the character
+
+With an attribute defined in an attribute set, we can add it to our character. Since our AbilitySystemComponent is 
+owned by our PlayerState, we'll place our AttributeSets in the PlayerState as well. Note that we add whole 
+AttributeSets to an ASC-owning actor, not individual attributes within that set.
+
+In the header file:
+```
+private:
+	UPROPERTY()
+	TObjectPtr<UHealthAttributeSet> HealthSet;
+```
+
+In the constructor:
+```cpp
+AGasPlayerState::AGasPlayerState()
+{
+   [...]
+   HealthSet = CreateDefaultSubobject<UHealthAttributeSet>("Health Attribute Set");
+}
+```
+
+Creating the AttributeSet as a Default SubObject ensures the AttributeSet exists before initial replication, allowing 
+clients to bind onto their delegates immediately. Creating them in the OwnerActor's constructor also lets the ASC 
+find them automatically during `UAbilitySystemComponent::InitializeComponent()`, when it looks through all its 
+OwnerActor's default SubObjects for AttributeSets. Otherwise, we would need to call ASC->AddSet<T> manually.
+
+At this point, the attribute will be functional and present on your player character. You may want to implement initialization, clamping functions or delegates on these attributes, in which case I would recommend looking at this documentation from Epic: https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#2attributesandattributesets
+
