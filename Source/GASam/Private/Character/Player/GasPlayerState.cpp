@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "EditorCategoryUtils.h"
+#include "LightningBoltAbility.h"
 #include "GameFramework/GameModeBase.h"
 #include "GAS/Attributes/HealthAttributeSet.h"
 #include "GAS/Attributes/ManaAttributeSet.h"
@@ -45,6 +46,9 @@ void AGasPlayerState::GrantDefaultAbilities() const
 			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass));
 		}
 	}
+
+	// Granting C++ abilities
+	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(ULightningBoltAbility::StaticClass()));
 }
 
 void AGasPlayerState::ApplyDefaultEffects() const

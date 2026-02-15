@@ -4,8 +4,10 @@
 
 namespace GASamGameplayTags
 {
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GASam_Damage, "GASam.Damage", "Tag representing damage, from an ability or effect");
+
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GASam_GameplayEvent_Death, "GASam.GameplayEvent.Death", "Event that fires on death. This event only fires on the server.");
 
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GASam_Ability_Fireball, "GASam.Ability.Fireball", "An ability that launches a ball of fire that explodes on impact");
-
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(GASam_Ability_LightningBolt, "GASam.Ability.LightningBolt", "An ability that launches a lightning bolt that electrocutes the target");
 }
