@@ -227,3 +227,128 @@ OwnerActor's default SubObjects for AttributeSets. Otherwise, we would need to c
 
 At this point, the attribute will be functional and present on your player character. You may want to implement initialization, clamping functions or delegates on these attributes, in which case I would recommend looking at this documentation from Epic: https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#2attributesandattributesets
 
+### 4. Gameplay Effects
+
+Gameplay Effects are the main mechanism you'll use to interact with your attributes, for example to heal your 
+character with a health potion or to have your enemies experience status effects. Gameplay Effects are also able to 
+add or remove GameplayTags, grant or block Gameplay Abilities, trigger additional Gameplay Effects and more. You'll 
+find a detailed documentation on everything they can do here: https://github.com/tranek/GASDocumentation?tab=readme-ov-file#concepts-ge
+
+For this walkthrough, we'll look at a simple gameplay effect to refill the player's health when the game starts.
+
+#### 4.1. Code vs Blueprints
+
+Gameplay Effects can be implemented in blueprints and in code, but I recommend sticking to blueprints unless you 
+have a specific reason to use code, for example in complex calculations (see 4.2.4. Executions). Customizing your 
+gameplay effects is much easier through the editor as there is UI and dropdowns allowing you to easily access all of a Gameplay Effect's features. 
+
+For an example implementation of a Gameplay Effect in code, see [LightningDamageEffect.cpp]
+(Source/GASam/Private/GAS/Effects/LightningDamageEffect.cpp). The rest of this documentation will use the editor route.
+
+#### 4.2. Gameplay Effect creation and overview
+
+In the Content Browser, right click to create a new asset and select Blueprint Class. Then, search for Gameplay 
+Effect in the list of classes. When you open it, you'll see an empty event graph which we won't be using. Select the 
+Class Defaults and look on the details pane, this is where you'll define the behavior of the gameplay effect.
+
+##### 4.2.1. Duration Policy and Periodic Effects
+
+The first setting you can define is the **Duration Policy**. 
+* Instant is instantaneous, and can be used for one-shot modifications such as changing the target's attributes.
+* Infinite is the opposite, it only ends when manually cancelled. Modifiers and granted tags are reverted when the 
+  effect is removed.
+* Has Duration is similar to Infinite but will remove itself after the given duration if it wasn't removed manually 
+  by another system.
+
+Selecting Infinite or Has Duration will also display a "Period" field, which is a time interval at which the effect's 
+modifiers and executions are re-applied. By default, this is set to 0 which means no periodic effect will occur. 
+Setting it to 0.5 and having it reduce the target's health would be a form of damage over time gameplay effect, as if an instant gameplay effect was applied every 0.5 second.
+
+##### 4.2.2. Components
+
+The next setting is a list of components, of which there can be 0 or as many as you want. These offer a variety of 
+actions such as granting gameplay tags to the effect's targets or applying additional effects.
+
+##### 4.2.3. Modifiers
+
+The modifiers are the mechanism with which a gameplay effect will modify its target's attributes. You can select any 
+attribute to be modified through various mathematical operations, for example adding -10 to a character's health 
+attribute for a damage effect.
+
+These are described in much more detail here: https://github.com/tranek/GASDocumentation?tab=readme-ov-file#concepts-ge-mods
+
+##### 4.2.4. Executions
+
+Executions are custom behavior implemented in C++ through the UGameplayEffectExecutionCalculation class. We'll see them 
+used for more complex attribute modifications, such as calculating the impact damage on health based on a physics collision. They won't be used in this example project.
+
+#### 4.3. Setting up an attribute initializer effect
+
+A GameplayEffect can be a good designer-facing way to setup a player's attributes. To do this, create a new Gameplay 
+Effect as described above, and set its duration to Instant. Add a modifier for each attribute you want to set, for 
+example one for your Health attribute and one for MaxHealth. Set these modifiers to Override then define the desired 
+value in the magnitude field, selecting the Scalable Float Calculation Type. When the effect takes place, the 
+player's health attribute will instantly be overriden to the value you set here.
+
+The next step is to have this gameplay effect execute when the game starts. One way to do this is to define an array 
+of Gameplay Effect subclasses in your AbilitySystemComponent's owning class, the PlayerState in this project:
+
+```h
+protected:
+    UPROPERTY(EditDefaultsOnly, Category = "GAS")
+	TArray<TSubclassOf<UGameplayEffect>> EffectsToApplyOnStart;
+```
+
+Then, define a function in the player state to apply those effects, for example:
+
+```cpp
+void AGasPlayerState::ApplyDefaultEffects() const
+{
+	check(AbilitySystemComponent);
+	for (const TSubclassOf<UGameplayEffect>& EffectClass : EffectsToApplyOnStart)
+	{
+		if (IsValid(EffectClass))
+		{
+			FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
+			Context.AddSourceObject(this);
+
+			constexpr int Level = 1.f;
+			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, Context);
+
+			if (SpecHandle.IsValid())
+			{
+				AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+			}
+		}
+	}
+}
+```
+
+Then, call this function when the Ability System Component is ready, such as in the InitializeAbilitySystemComponent 
+function created in section 2.2:
+
+```cpp
+void AGasPlayerCharacter::InitializeAbilitySystemComponent()
+{
+	if (AGasPlayerState* GasPlayerState = GetPlayerStateChecked<AGasPlayerState>())
+	{
+		AbilitySystemComponent = GasPlayerState->GetAbilitySystemComponent();
+		AbilitySystemComponent->InitAbilityActorInfo(GasPlayerState, this);
+
+		if (HasAuthority())
+		{
+			GasPlayerState->ApplyDefaultEffects();
+		}
+	}
+}
+```
+
+With this, you have your first gameplay effect and an editor-facing way to change your player's starting attributes.
+
+#### 4.4. Applying Gameplay Effects in blueprints
+
+We'll often use Gameplay Abilities (next section) to apply gameplay effects, but we can also apply them wherever we 
+have access to an actor's AbilitySystemComponent. For example, in your character's blueprint, you can use the "Get 
+Ability System Component" node to get the ASC from your character, then use the "ApplyGameplayEffectToSelf" to 
+select a gameplay effect class to apply. The node will return a Gameplay Effect Handle, which you'll need to hold on 
+to if you want to cancel that effect later if it's not instantaneous.
