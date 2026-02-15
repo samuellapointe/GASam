@@ -11,25 +11,13 @@ Controls:
 * Movement: WASD keys, or arrow keys
 * Jump: Spacebar
 * Camera: Mouse movement
-* V: Debug apply damage to self
+* Q: Fireball ability
+* E: Lightning bolt ability
 
 ### Browsing the code:
 Throughout the project, useful information about GAS concepts has been marked in comments with `[INFO]`
 
-#### Suggested browsing order:
-1. Initialization of the ASC
-   1. [GasPlayerState.h](Source/GASam/Private/Character/Player/GasPlayerState.h), which is where the player's Ability 
-      System lives.
-   2. [AGasPlayerState::AGasPlayerState()](Source/GASam/Private/Character/Player/GasPlayerState.cpp) for the 
-      instantiation
-   3. [AGasPlayerCharacter::InitializeAbilitySystemComponent](Source/GASam/Private/Character/Player/GasPlayerCharacter.cpp) for the initialization
-2. Creation of the attributes
-   1. [HealthAttributeSet.h](Source/GASam/Private/GAS/Attributes/HealthAttributeSet.h) and its cpp file for an 
-      example of an attribute set. ManaAttributeSet is very similar although simpler. They get instantiated in the 
-      PlayerState's constructor.
-
-
-## Detailed Walkthrough
+## Detailed Walkthrough - Getting started with GAS
 ### 1. Setting up the project
 Open your project's *.Build.cs file and add the following to your public dependency modules:
 * GameplayAbilities
