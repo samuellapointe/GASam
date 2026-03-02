@@ -67,7 +67,7 @@ void AGasPlayerState::ApplyDefaultEffects() const
 			FGameplayEffectContextHandle Context = AbilitySystemComponent->MakeEffectContext();
 			Context.AddSourceObject(this);
 
-			constexpr int Level = 1.f;
+			constexpr int Level = 1;
 			FGameplayEffectSpecHandle SpecHandle = AbilitySystemComponent->MakeOutgoingSpec(EffectClass, Level, Context);
 
 			if (SpecHandle.IsValid())

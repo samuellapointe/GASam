@@ -63,7 +63,7 @@ AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed
 ```
 For an explanation on the replication mode, see the following documentation: https://github.com/tranek/GASDocumentation?tab=readme-ov-file#411-replication-mode
 
-You'll also need to increase the PlayerState's NetUpdateFrequency since its default value is quite low and it'll 
+You'll also need to increase the PlayerState's NetUpdateFrequency since its default value is quite low (1hz) and it'll 
 affect the responsiveness of the ASC, and by extension, the attributes, effects and abilities.
 ```cpp
 SetNetUpdateFrequency(100.f);
@@ -490,7 +490,7 @@ This is great and all, but there's still no interaction with the rest of the abi
 
 The projectile should take away a portion of a player's health if it lands on them. The simplest way to do this is with an instant gameplay effect, create one with a single modifier: one that "adds" -20 to the health attribute.
 
-Then, open your projectile and select the Collider component to implement its "On Component Begin Overlap" event. Here, you can start by skipping processing if the hit actor is the projectile's Instigator. Then, use "Get Ability System Component" on the hit actor. If it's not valid, as one would expect when the projectile hits the wall, simply have the projectile destroy itself. If it is valid, use the ASC's "ApplyGameplayEffectToSelf" node to apply your damage gameplay effect. Then, have the projectile destroy itself. This should be enough to have functional damage on your fireball.
+For a minimal working example: open your projectile and select the Collider component to implement its "On Component Begin Overlap" event. Here, you can start by skipping processing if the hit actor is the projectile's Instigator. Then, use "Get Ability System Component" on the hit actor. If it's not valid, as one would expect when the projectile hits the wall, simply have the projectile destroy itself. If it is valid, use the ASC's "ApplyGameplayEffectToSelf" node to apply your damage gameplay effect. Then, have the projectile destroy itself. This should be enough to have functional damage on your fireball, but it will be hardcoded and won't use the instigator's attributes.
 
 In the example project in this repository, I set up the damage effect to use a "Set by caller" magnitude instead of hardcoding it to -20. The fireball gameplay ability prepares a Gameplay Effect Spec, assigning it a magnitude by tag (GASam.Damage), which the gameplay effect is set to read from. This makes it possible for the fireball ability to decide how much damage to apply, for example if the ability is leveled up or the instigating character has a buff.
 
