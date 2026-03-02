@@ -34,11 +34,15 @@ UAbilitySystemComponent* AGasPlayerState::GetAbilitySystemComponent() const
 	return AbilitySystemComponent;
 }
 
-void AGasPlayerState::GrantDefaultAbilities() const
+void AGasPlayerState::GrantDefaultAbilities()
 {
 	check(AbilitySystemComponent);
 	
-	AbilitySystemComponent->ClearAllAbilities();
+	if (bStartupAbilitiesGranted)
+	{
+		return;
+	}
+	
 	for (const TSubclassOf<UGameplayAbility>& AbilityClass : AbilitiesToGrantOnStart)
 	{
 		if (IsValid(AbilityClass))
@@ -46,6 +50,8 @@ void AGasPlayerState::GrantDefaultAbilities() const
 			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass));
 		}
 	}
+
+	bStartupAbilitiesGranted = true;
 
 	// Granting C++ abilities
 	AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(ULightningBoltAbility::StaticClass()));

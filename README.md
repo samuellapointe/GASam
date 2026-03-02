@@ -1,18 +1,18 @@
 # GASam
 
-### NOTE: This is an incomplete work in progress!
-
 This is an example project meant to showcase a minimal setup of Unreal's Gameplay Ability System project with as least 
 clutter as possible, along with some examples of abilities, effects and cues. It was made using the "Blank" project 
 template in Unreal 5.6.1.
+
+Down below is a written walkthrough on how to setup the Gameplay Ability System on a new project and how to set up a health attribute, a gameplay effect to initialize health to a default value and a Fireball gameplay ability that applies damage to other players. The end result of the guide is less intricate than the linked project, which also includes simple UI and FXs, but functions mostly the same way.
 
 ### Testing the game
 Controls:
 * Movement: WASD keys, or arrow keys
 * Jump: Spacebar
 * Camera: Mouse movement
-* Q: Fireball ability
-* E: Lightning bolt ability
+* Q: Fireball ability (Blueprint ability example)
+* E: Lightning bolt ability (C++ ability example)
 
 ### Browsing the code:
 Throughout the project, useful information about GAS concepts has been marked in comments with `[INFO]`
@@ -215,6 +215,15 @@ OwnerActor's default SubObjects for AttributeSets. Otherwise, we would need to c
 
 At this point, the attribute will be functional and present on your player character. You may want to implement initialization, clamping functions or delegates on these attributes, in which case I would recommend looking at this documentation from Epic: https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#2attributesandattributesets
 
+#### 3.4. Testing attributes
+
+Having attributes is great, but until you implement a health bar, you need a way to check their values. There are two easy ways to do this in editor:
+
+* Open the console (\`) then type ShowDebug AbilitySystem. Text should appear on the top right of the viewport with a list of attributes and their values. Note that you can then type `AbilitySystem.Debug.NextCategory` to cycle to a list of Gameplay Effects, then to a list of Gameplay Abilities.
+* Press the Apostrophe (') key on US keyboards, or bind it to a key of your choice in the project settings (Engine -> Gameplay Debugger -> Activation Key). Some debug text will show up in the top left of the view port, press Numpad 3 to open a list of information related to GAS. There should be a list of your character's applied GameplayTags, active GameplayEffects and granted or active GameplayAbilities.
+
+Read more on this here: https://github.com/tranek/GASDocumentation?tab=readme-ov-file#6-debugging-gas
+
 ### 4. Gameplay Effects
 
 Gameplay Effects are the main mechanism you'll use to interact with your attributes, for example to heal your 
@@ -343,7 +352,7 @@ to if you want to cancel that effect later if it's not instantaneous.
 
 ### 5. Gameplay Abilities
 
-Gameplay Abilities are the implementation of actions that will be taken by Actors in a game using the Gameplay Ability System. These actions can be as simple as sprinting to move faster temporarily or jumping, it can be an ability that runs in the background and reacts when an attribute crosses a threshold; but for this particular walkthrough, we'll be implementing a fireball ability. It would be easy to implement such a feature without GAS in Unreal Engine, but using a Gameplay Ability will let us interact with our Attributes, apply Gameplay Effects, and it has additional benefits such as handling replication for us.
+Gameplay Abilities are the implementation of actions that will be taken by Actors in a game using the Gameplay Ability System. These actions can be as simple as sprinting to move faster temporarily or jumping, it can be an ability that runs in the background and reacts when an attribute crosses a threshold; but for this particular walkthrough, we'll be implementing a fireball ability. It would be easy to implement such a feature without GAS in Unreal Engine, but using a Gameplay Ability will let us interact with our Attributes, apply Gameplay Effects, and it has additional benefits such as handling replication for us and having built-in support for cost and cooldown.
 
 #### 5.1. Creating an ability in Blueprint
 
@@ -351,11 +360,11 @@ In my (relatively short) experience with GAS, it's easier to create an ability i
 
 A detailed flowchart of Gameplay Abilities can be found here: https://github.com/tranek/GASDocumentation?tab=readme-ov-file#concepts-ga-definition
 
-But in short, ActivateAbility is where you'll want to start plugging your code, handling whatever logic you need to handle (such as spawning the projectile), and finishing by calling EndAbility. There's multiple ways to end an ability, a lot of which depend on which method you use to trigger that ability, but you want to call EndAbility when you know your logic has run and there's nothing more to do.
+But in short, ActivateAbility is where you'll want to start plugging your code, handling whatever logic you need to handle (such as spawning the projectile), and finishing by calling EndAbility. There's multiple ways to end an ability, a lot of which depend on which method you use to trigger that ability, but you want to call EndAbility when you know your logic has run and there's nothing more to do. Later, you'll also add a call to Commit Ability to support ability cost and cooldown.
 
 #### 5.2. Creating a simple projectile class
 
-To create a fireball ability, we'll need a fireball actor. Create a new blueprint class deriving for actor. Add a mesh of your choice such as a simple sphere and disable collisions on it. Add a Collider component that fits with the mesh, have it Generate Overlap Events, set its collision enabled (Query and Physics) and have it overlap with Pawn (and other categories of your choice depending on the behavior you want). Then, give it a Projectile Movement component and set its Initial Speed to something like 1000. We'll leave it like this for now and come back to it later. Finally, mark your actor as Replicated so that when it spawns on the server, clients will receive a copy as well.
+To create a fireball ability, we'll need a fireball actor. Create a new blueprint class deriving for actor. Add a mesh of your choice such as a simple sphere and disable collisions on it. Add a Collider component that fits with the mesh, have it Generate Overlap Events, set its collision enabled (Query only) and have it overlap with Pawn (and other categories of your choice depending on the behavior you want). Then, give it a Projectile Movement component and set its Initial Speed to something like 1000. We'll leave it like this for now and come back to it later. Finally, mark your actor as Replicated so that when it spawns on the server, clients will receive a copy as well.
 
 #### 5.3. Spawning the projectile
 
@@ -364,7 +373,7 @@ Alternatively, you can look at how Unreal Tournament did it in 1999, the idea on
 
 For the sake of simplicity, we'll accept that the projectile is server authoritative and that the client will not see it right away. In your fireball ability's class defaults, set the Net Execution Policy to Server Only. Clients will still be able to trigger this ability, but it will only run on the server.
 
-Create an empty function named SpawnProjectile. Connect it as follows: Event ActivateAbility -> SpawnProjectile -> EndAbility. In the SpawnProjectile function, use the SpawnActor blueprint node to create an instance of your projectile blueprint at a location of your choosing, such as the instigating character's eyes view point which you can get with the node "Get Avatar Actor from Actor Info". With this done, we now have an ability that should spawn a server-authoritative projectile when activated.
+Create an empty function named SpawnProjectile. Connect it as follows: Event ActivateAbility -> SpawnProjectile -> EndAbility. (Later you'll add CommitAbility with an early EndAbility if it fails, see Cost and Cooldown). In the SpawnProjectile function, use the SpawnActor blueprint node to create an instance of your projectile blueprint at a location of your choosing, such as the instigating character's eyes view point which you can get with the node "Get Avatar Actor from Actor Info". With this done, we now have an ability that should spawn a server-authoritative projectile when activated.
 
 #### 5.4. Granting abilities
 
@@ -377,14 +386,23 @@ UPROPERTY(EditDefaultsOnly, Category = "GAS")
 TArray<TSubclassOf<UGameplayAbility>> AbilitiesToGrantOnStart;
 ```
 
+as well as a boolean to track whether the abilities were granted, as we only want to grant them once:
+```cpp
+bool bStartupAbilitiesGranted = false;
+```
+
 Then create a function that will loop through this array and grant them using AbilitySystemComponent::GiveAbility:
 
 ```cpp
-void AGasPlayerState::GrantDefaultAbilities() const
+void AGasPlayerState::GrantDefaultAbilities()
 {
 	check(AbilitySystemComponent);
 	
-	AbilitySystemComponent->ClearAllAbilities();
+	if (bStartupAbilitiesGranted)
+	{
+		return;
+	}
+	
 	for (const TSubclassOf<UGameplayAbility>& AbilityClass : AbilitiesToGrantOnStart)
 	{
 		if (IsValid(AbilityClass))
@@ -392,6 +410,8 @@ void AGasPlayerState::GrantDefaultAbilities() const
 			AbilitySystemComponent->GiveAbility(FGameplayAbilitySpec(AbilityClass));
 		}
 	}
+
+	bStartupAbilitiesGranted = true;
 }
 ```
 
@@ -416,7 +436,7 @@ The player will then be allowed to use abilities defined in this array. Don't fo
 
 #### 5.5. Activating abilities
 
-There are at least 6 different ways to activate an ability with GAS listed [here](https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#howdoilettheplayeractivateabilities?). This page is quite useful as it is, so I won't repeat its contents here. In this particular walkthrough, we'll be using the sixth method listed, Ability Triggers.
+There are at least 6 different ways to activate an ability with GAS listed [here](https://dev.epicgames.com/community/learning/tutorials/DPpd/unreal-engine-gameplay-ability-system-best-practices-for-setup#howdoilettheplayeractivateabilities?). This page is quite useful as it is, so I won't repeat its contents here. In this particular walkthrough, we'll be using the third method listed, activating via tag.
 
 #### 5.5.1. Setting up input
 
@@ -455,7 +475,7 @@ void AGasPlayerCharacter::UsePrimaryAbility(const FInputActionValue& Value)
 
 The input will now try to activate abilities by the tags defined in your PrimaryAbilityTags container. In the editor, open your character blueprint and find this container in the Class Defaults. It'll show a box saying "Empty", click on it to create a GameplayTag with the name of your choice (I used GASam.Ability.Fireball). For more information on GameplayTags, you can look [here](https://github.com/tranek/GASDocumentation?tab=readme-ov-file#concepts-gt), they're quite powerful!
 
-Then, we need to associate that tag with our fireball ability. Open the ability blueprint, select the class defaults, and scroll down to the Triggers section. Create a new entry in Ability Triggers and give it the tag you created earlier. The Trigger Source should be left to GameplayEvent. And that's it! The flow should go as follows:
+Then, we need to associate that tag with our fireball ability. Open the ability blueprint, select the class defaults, and add your newly created tag to the AssetTags (Default AbilityTags). When calling TryActivateAbilitiesByTag, the tag selected in AssetTags will be the one used to select the ability to activate. And that's it! The flow should go as follows:
 
 * Somewhere in startup such as ACharacter::SetupPlayerInputComponent, an input action is bound to an UsePrimaryAbility function
 * When the character is possessed, InitializeAbilitySystemComponent is called, granting the fireball ability
@@ -465,3 +485,29 @@ Then, we need to associate that tag with our fireball ability. Open the ability 
 * The player sees a projectile appear (with latency for clients) and fire off.
 
 This is great and all, but there's still no interaction with the rest of the ability system. The projectile doesn't do any damage and doesn't cost anything to use. The next sections will address this.
+
+#### 5.5.4. Applying damage
+
+The projectile should take away a portion of a player's health if it lands on them. The simplest way to do this is with an instant gameplay effect, create one with a single modifier: one that "adds" -20 to the health attribute.
+
+Then, open your projectile and select the Collider component to implement its "On Component Begin Overlap" event. Here, you can start by skipping processing if the hit actor is the projectile's Instigator. Then, use "Get Ability System Component" on the hit actor. If it's not valid, as one would expect when the projectile hits the wall, simply have the projectile destroy itself. If it is valid, use the ASC's "ApplyGameplayEffectToSelf" node to apply your damage gameplay effect. Then, have the projectile destroy itself. This should be enough to have functional damage on your fireball.
+
+In the example project in this repository, I set up the damage effect to use a "Set by caller" magnitude instead of hardcoding it to -20. The fireball gameplay ability prepares a Gameplay Effect Spec, assigning it a magnitude by tag (GASam.Damage), which the gameplay effect is set to read from. This makes it possible for the fireball ability to decide how much damage to apply, for example if the ability is leveled up or the instigating character has a buff.
+
+The example project also makes use of the "Apply Additional Effect" component to apply a "On Fire" gameplay effect, which applies further damage over a period of time. Finally, it uses a "Damage" meta attribute instead of modifying health directly, more on this [here](https://github.com/tranek/GASDocumentation?tab=readme-ov-file#concepts-a-meta). You can also look at Unreal's Project Lyra, which handles damage in a similar way.
+
+#### 5.5.5. Ability cost
+
+It would be overpowered for a player to be able to use his fireball ability as much as he wants, and gameplay abilities have built-in ways to handle this: cost and cooldown.
+
+Create a new set of attributes for "Mana" (and MaxMana) then update your Attribute Initializer effect (section 4.3) to fill up mana to the max. Alternatively, you could decide to use health as a currency for your abilities. Then, create a new gameplay effect to be used as the ability's cost. It should have a single modifier that "adds" a negative value of mana. Next, open up you fireball ability and find the "Cost Gameplay Effect Class" property in the Class Defaults. Select the new gameplay effect you made, and you should be good to go. 
+
+If you try your ability at this point, you'll notice it doesn't apply the cost yet; this is because we need a final vital call to "CommitAbility". In the ability's event graph, connect a call to CommitAbility to the ActivateAbility event node. If it returns true, proceed with the spawning, otherwise call EndAbility. CommitAbility is the function that pays the cost you set as the Cost Gameplay Effect Class, if it can be paid. Your ability should now be consuming Mana, which you can confirm using the methods listed in section 3.4.
+
+#### 5.5.6. Ability cooldown
+
+Ability cooldowns are set up very similarly to ability costs. Create a gameplay effect for your cooldown, and change its Duration Policy to "Has Duration". This is where you'll set the cooldown's duration.
+
+In the effect's Components, add "Grant Tags to Target Actor". Then, create a unique tag for this ability (or ability slot)'s cooldown, for example `Ability.Fireball.Cooldown` and select it.
+
+Finally, open your GameplayAbility, find the "Cooldown Gameplay Effect Class" in the attribute defaults, and set it to your new Gameplay Effect. As with the ability cost, the cooldown won't be applied unless you have a call to "CommitAbility" after the gameplay activation node.

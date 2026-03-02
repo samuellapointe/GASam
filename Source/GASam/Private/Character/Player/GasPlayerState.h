@@ -34,7 +34,7 @@ public:
 	const UHealthAttributeSet* GetHealthSet() const { return HealthSet; };
 	const UManaAttributeSet* GetManaSet() const { return ManaSet; };
 
-	void GrantDefaultAbilities() const;
+	void GrantDefaultAbilities();
 	void ApplyDefaultEffects() const;
 
 	void RespawnCharacter() const;
@@ -68,4 +68,6 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UManaAttributeSet> ManaSet;
+
+	bool bStartupAbilitiesGranted = false;
 };
